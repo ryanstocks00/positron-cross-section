@@ -1,7 +1,7 @@
 Positron Cross Section Analysis
 ===============================
 
-This is a python application that allows the analysis and plotting of positron cross sections
+This is a python application that assists with the analysis and plotting of positron cross sections
 
 |pre-commit|
 
@@ -45,15 +45,15 @@ Installing Python
 ~~~~~~~~~~~~~~~~~
 
 As this is a python application, we first need to install python. We
-will use Chocolatey to install version 3.8.6. Open Windows PowerShell as
+will use Chocolatey to install version 3.9.5. Open Windows PowerShell as
 an administrator and run the command:
 
 .. code:: powershell
 
-    choco install -y python3 --version=3.8.6 --force
+    choco install -y python3 --version=3.9.5 --force
 
-If the installation is successful, python 3.8 can then be accessed using
-the command ``py -3.8`` (and exited using the command ``exit()``).
+If the installation is successful, python 3.9 can then be accessed using
+the command ``py -3.9`` (and exited using the command ``exit()``).
 
 Installing Git
 ~~~~~~~~~~~~~~
@@ -110,7 +110,7 @@ Unix installation instructions (Including WSL)
 Setting up Python Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The python code in this application requires python 3.8 or greater. To
+The python code in this application requires python 3.9 or greater. To
 maintain the integrity of other python applications on your system, it
 is highly recommended to use a separate python environment for the
 positron cross section analysis acpplication, however it can also be installed directly if
@@ -148,10 +148,10 @@ or running the command
     exec $SHELL
 
 To create a pyenv environment called positrons for this application with
-python version 3.8.6, run the commands
+python version 3.9.5, run the commands
 
-1. ``pyenv install 3.8.6``
-2. ``pyenv virtualenv 3.8.6 positrons``
+1. ``pyenv install 3.9.5``
+2. ``pyenv virtualenv 3.9.5 positrons``
 
 Then, prior to following the installation steps below and before each
 time using the ``positron_cross_section`` application, you will need
@@ -179,5 +179,5 @@ Congratulations! The poistron cross section analysis application is now
 
 in a new terminal window.
 
-.. |pre-commit| image:: https://github.com/ryanstocks00/positron-cross-section-analysis/actions/workflows/python-3.8-pre-commit.yml/badge.svg
-   :target: https://github.com/ryanstocks00/positron-cross-section-analysis/actions/workflows/python-3.8-pre-commit.yml
+.. |pre-commit| image:: https://github.com/ryanstocks00/positron-cross-section-analysis/actions/workflows/python-3.9-pre-commit.yml/badge.svg
+   :target: https://github.com/ryanstocks00/positron-cross-section-analysis/actions/workflows/python-3.9-pre-commit.yml
