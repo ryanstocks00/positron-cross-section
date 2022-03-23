@@ -1,0 +1,4 @@
+# All text files should use LF line endings
+* text eol=lf
+*.png binary
+*.ttf binary

@@ -1,0 +1,4 @@
+[flake8]
+inline-quotes = double
+max-line-length = 100
+ignore = D104, W503, C812, C813, C815, R0902, E203, S001
