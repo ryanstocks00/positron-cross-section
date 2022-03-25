@@ -132,3 +132,6 @@ dmypy.json
 
 # Input files
 data/
+
+# Output files
+output/

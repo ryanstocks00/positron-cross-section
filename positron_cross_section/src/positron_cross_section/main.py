@@ -20,11 +20,14 @@ def main() -> None:
 @app.command()
 def grand_total(
     data_filename: Path = typer.Argument(..., help="Path to cross section data file."),
+    output_path: Path = typer.Argument("output", help="Path to store output data."),
 ) -> None:
     """Calculate and plot grand total cross section."""
-    gtcs_data = GTCSData.from_csv(data_filename)
+    output_path.mkdir(exist_ok=True, parents=True)
 
-    gtcs_data.plot_cross_sections()
+    gtcs_data = GTCSData.from_csv(data_filename)
+    gtcs_data.plot_cross_sections(output_path)
+    gtcs_data.plot_I_0_ratio(output_path)
 
 
 if __name__ == "__main__":

@@ -5,13 +5,14 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 from pydantic import BaseModel, validator
 from uncertainties import unumpy
 
 from positron_cross_section.gas import numeric_density
-from positron_cross_section.plot import cross_section_plot
+from positron_cross_section.plot import average_columns_with_uncertainty, cross_section_plot
 
 VarType = TypeVar("VarType")
 
@@ -118,6 +119,15 @@ class GTCSMetadata(BaseModel):
         """
         return list(range(1, len(self.SC_energies) - 1, 3))
 
+    @property
+    def I_0_prime_indices(self) -> List[int]:
+        """Get I_0' indices for GTCS.
+
+        Returns:
+            List[int]:
+        """
+        return list(range(2, len(self.SC_energies) - 1, 3))
+
 
 class GTCSData:
     """GTCSData."""
@@ -128,38 +138,39 @@ class GTCSData:
         pressures: NDArray[np.float64],
         signal_data: NDArray[np.float64],
     ) -> None:
+        """Initialise GTCS Data
+
+        Args:
+            metadata (GTCSMetadata): metadata
+            pressures (NDArray[np.float64]): pressures
+            signal_data (NDArray[np.float64]): signal_data
+        """
         self.metadata = metadata
         self.pressures = pressures
-        self.numeric_densities = np.transpose(numeric_density(pressures)).reshape(
-            len(self.pressures), 1
-        )
         self.signal_data = signal_data
 
         self.zeroed_signal_data = self.signal_data - self.signal_data[:, -1:]
+        self.numeric_gas_densities = np.transpose(numeric_density(pressures)).reshape(
+            len(self.pressures), 1
+        )
 
         self.I_or = self.zeroed_signal_data[0:, :1]
-        self.I_m = self.zeroed_signal_data[:, self.metadata.I_m_indices]
         self.I_0 = self.zeroed_signal_data[:, self.metadata.I_0_indices]
+        self.I_0_prime = self.zeroed_signal_data[:, self.metadata.I_0_prime_indices]
+        self.I_m = self.zeroed_signal_data[:, self.metadata.I_m_indices]
 
         self.raw_total_cross_sections = (
             np.log(self.I_or / self.I_m)
-            / (self.numeric_densities * self.metadata.SC_length)
+            / (self.numeric_gas_densities * self.metadata.SC_length)
             * SQUARE_METRES_TO_ANGSTROMS
-        )
-        self.total_cross_sections = unumpy.uarray(
-            np.mean(self.raw_total_cross_sections, axis=0),
-            np.std(self.raw_total_cross_sections, axis=0) / np.sqrt(len(self.pressures)),
         )
         self.raw_ps_cross_sections = (
             np.log(self.I_or / self.I_0)
-            / (self.numeric_densities * self.metadata.SC_length)
+            / (self.numeric_gas_densities * self.metadata.SC_length)
             * SQUARE_METRES_TO_ANGSTROMS
         )
-        self.ps_cross_sections = unumpy.uarray(
-            np.mean(self.raw_ps_cross_sections, axis=0),
-            np.std(self.raw_ps_cross_sections, axis=0) / np.sqrt(len(self.pressures)),
-        )
-        self.scattering_cross_sections = self.total_cross_sections - self.ps_cross_sections
+        self.ps_cross_sections = average_columns_with_uncertainty(self.raw_ps_cross_sections)
+        self.total_cross_sections = average_columns_with_uncertainty(self.raw_total_cross_sections)
         self.scattering_cross_sections = self.total_cross_sections - self.ps_cross_sections
 
     def plot_total_cross_section(self, ax: Any) -> None:
@@ -201,14 +212,14 @@ class GTCSData:
             label="Scattering",
         )
 
-    def plot_cross_sections(self) -> None:
+    def plot_cross_sections(self, output_path: Path) -> None:
         """Plot grand total, positronium, and scattering cross sections."""
         fig, ax = cross_section_plot()
         self.plot_total_cross_section(ax)
         ax.set_title(
             f"Grand total cross section for positron-{self.metadata.target.lower()} interaction"
         )
-        fig.savefig(f"grand-total-cross-section-{self.metadata.target.lower()}.png")
+        fig.savefig(output_path / f"grand-total-cross-section-{self.metadata.target.lower()}.png")
 
         fig, ax = cross_section_plot()
         self.plot_ps_cross_section(ax)
@@ -216,7 +227,7 @@ class GTCSData:
             f"Positronium formation cross section for positron-{self.metadata.target.lower()} "
             "interaction"
         )
-        fig.savefig(f"ps-cross-section-{self.metadata.target.lower()}.png")
+        fig.savefig(output_path / f"ps-cross-section-{self.metadata.target.lower()}.png")
 
         fig, ax = cross_section_plot()
         self.plot_total_cross_section(ax)
@@ -224,7 +235,23 @@ class GTCSData:
         self.plot_scattering_cross_section(ax)
         ax.set_title(f"Cross section for positron-{self.metadata.target.lower()} interaction")
         ax.legend()
-        fig.savefig(f"cross-sections-{self.metadata.target.lower()}.png")
+        fig.savefig(output_path / f"cross-sections-{self.metadata.target.lower()}.png")
+
+    def plot_I_0_ratio(self, output_path: Path) -> None:
+        """Plot the ratio I_0/I_0' as a systematic (sanity) check."""
+        ratio = average_columns_with_uncertainty(self.I_0 / self.I_0_prime)
+        fig, ax = plt.subplots()
+        ax.errorbar(
+            self.metadata.cross_section_energies,
+            unumpy.nominal_values(ratio),
+            yerr=unumpy.std_devs(ratio),
+            fmt="o",
+            color="red",
+            ecolor="black",
+            capsize=4,
+        )
+        ax.set_title("Ratio $\\frac{I_0}{I_0'}$")
+        fig.savefig(output_path / f"I_0-ratio-{self.metadata.target.lower()}.png")
 
     @classmethod
     def from_csv(cls, csv_filename: Path) -> "GTCSData":
