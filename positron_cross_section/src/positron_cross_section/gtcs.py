@@ -138,7 +138,7 @@ class GTCSData:
         pressures: NDArray[np.float64],
         signal_data: NDArray[np.float64],
     ) -> None:
-        """Initialise GTCS Data
+        """Initialise GTCS Data.
 
         Args:
             metadata (GTCSMetadata): metadata
