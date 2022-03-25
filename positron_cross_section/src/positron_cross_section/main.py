@@ -6,7 +6,7 @@ from sys import stderr
 
 import typer
 
-from positron_cross_section.gtcs import GTCSMetadata
+from positron_cross_section.gtcs import GTCSData
 
 app = typer.Typer()
 
@@ -22,10 +22,9 @@ def grand_total(
     data_filename: Path = typer.Argument(..., help="Path to cross section data file."),
 ) -> None:
     """Calculate and plot grand total cross section."""
-    gtcs_metadata, pressures, signal_data = GTCSMetadata.from_csv(data_filename)
-    print(gtcs_metadata)
-    print(pressures)
-    print(signal_data)
+    gtcs_data = GTCSData.from_csv(data_filename)
+
+    gtcs_data.plot_cross_sections()
 
 
 if __name__ == "__main__":
