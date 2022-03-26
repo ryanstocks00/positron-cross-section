@@ -157,6 +157,8 @@ class GTCSData:
         self.I_0 = self.zeroed_signal_data.T[self.metadata.I_0_indices].T
         self.I_0_prime = self.zeroed_signal_data.T[self.metadata.I_0_prime_indices].T
         self.I_m = self.zeroed_signal_data.T[self.metadata.I_m_indices].T
+        self.I_st = self.I_or - self.I_m
+        self.I_s = self.I_0_prime - self.I_m
 
         self.raw_total_cross_sections = (
             np.log(self.I_or / self.I_m)
@@ -208,7 +210,22 @@ class GTCSData:
             color="green",
             ecolor="black",
             capsize=4,
-            label="Scattering",
+            label="Scattering ($\\sigma_T-\\sigma_{Ps}$)",
+        )
+
+        ratio = average_columns_with_uncertainty(self.I_s) / average_columns_with_uncertainty(
+            self.I_st
+        )
+        print(ratio)
+        ax.errorbar(
+            self.metadata.cross_section_energies,
+            unumpy.nominal_values(ratio * self.total_cross_sections),
+            yerr=unumpy.std_devs(ratio * self.total_cross_sections),
+            fmt="o",
+            color="purple",
+            ecolor="black",
+            capsize=4,
+            label="Scattering ($\\frac{I_s}{I_{st}}\\sigma_T$)",
         )
 
     def plot_cross_sections(self, output_path: Path) -> None:

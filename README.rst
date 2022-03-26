@@ -3,25 +3,28 @@ Positron Cross Section Analysis
 
 This is a python application that assists with the analysis and plotting of positron cross sections
 
-|pre-commit|
+|pre-commit| |pypi|
 
 Installation
 ============
 
-To install the positron cross section application, ensure that you have python version 3.7 or greater
+To install the positron cross section application, ensure that you have python version 3.7 or greater with the command
 
 .. code:: bash
-   python --version
 
-and then install with
+    python --version
+
+and then install the positron-cross-section application with
 
 .. code:: bash
-   python -m pip install --upgrade pip
-   python -m pip install positron-cross-section
+
+    python -m pip install --upgrade pip
+    python -m pip install positron-cross-section
 
 You can then run the application using the command
 
 .. code:: bash
+
     positron-cross-section cross_section_data.csv
 
 which will produce total cross section plots in the `output` folder.
@@ -103,3 +106,5 @@ in a new terminal window.
 
 .. |pre-commit| image:: https://github.com/ryanstocks00/positron-cross-section/actions/workflows/python-3.9-pre-commit.yml/badge.svg
    :target: https://github.com/ryanstocks00/positron-cross-section/actions/workflows/python-3.9-pre-commit.yml
+.. |pypi| image:: https://badge.fury.io/py/positron-cross-section.svg
+   :target: https://pypi.org/project/positron-cross-section/
