@@ -148,16 +148,18 @@ class GTCSData:
         self.metadata = metadata
         self.pressures = pressures
         self.signal_data = signal_data
+        self.num_scans = self.signal_data.shape[0]
+        scan_range = list(range(self.num_scans))
 
         self.zeroed_signal_data = self.signal_data - self.signal_data[:, -1:]
         self.numeric_gas_densities = np.transpose(numeric_density(pressures)).reshape(
             len(self.pressures), 1
         )
 
-        self.I_or = self.zeroed_signal_data[0:, :1]
-        self.I_0 = self.zeroed_signal_data[:, self.metadata.I_0_indices]
-        self.I_0_prime = self.zeroed_signal_data[:, self.metadata.I_0_prime_indices]
-        self.I_m = self.zeroed_signal_data[:, self.metadata.I_m_indices]
+        self.I_or = self.zeroed_signal_data[:, :1]
+        self.I_0 = self.zeroed_signal_data[scan_range, self.metadata.I_0_indices]
+        self.I_0_prime = self.zeroed_signal_data[scan_range, self.metadata.I_0_prime_indices]
+        self.I_m = self.zeroed_signal_data[scan_range, self.metadata.I_m_indices]
 
         self.raw_total_cross_sections = (
             np.log(self.I_or / self.I_m)
@@ -270,14 +272,14 @@ class GTCSData:
         RPA2_cutoff = extract_from_csv_row(parameter_row, "RPA 2 Cutoff: (.*) V", float)
         SC_cutoff = extract_from_csv_row(parameter_row, "Scattering Cell Cutoff: (.*) V", float)
 
-        run_rows = csv_data[6:]
-        pressures: NDArray[np.float64] = np.ndarray(len(run_rows) // 2, dtype="float64")
+        scan_rows = csv_data[6:]
+        pressures: NDArray[np.float64] = np.ndarray(len(scan_rows) // 2, dtype="float64")
         signal_data: NDArray[np.float64] = np.ndarray(
-            (len(run_rows) // 2, len(run_rows[0])), dtype="float64"
+            (len(scan_rows) // 2, len(scan_rows[0])), dtype="float64"
         )
-        for i in range(0, len(run_rows) // 2):
-            pressures[i] = run_rows[2 * i][0]
-            signal_data[i] = run_rows[2 * i + 1]
+        for i in range(0, len(scan_rows) // 2):
+            pressures[i] = scan_rows[2 * i][0]
+            signal_data[i] = scan_rows[2 * i + 1]
 
         return cls(
             metadata=GTCSMetadata(

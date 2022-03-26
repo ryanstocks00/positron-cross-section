@@ -100,7 +100,7 @@ Congratulations! The poistron cross section analysis application is now
 
 .. code:: powershell
 
-    positron_cross_section --help
+    positron-cross-section --help
 
 in a new powershell window.
 
@@ -154,7 +154,7 @@ python version 3.9.5, run the commands
 2. ``pyenv virtualenv 3.9.5 positrons``
 
 Then, prior to following the installation steps below and before each
-time using the ``positron_cross_section`` application, you will need
+time using the ``positron-cross-section`` application, you will need
 to enter the positrons python environment using the command
 
 ``pyenv activate positrons``
@@ -175,7 +175,7 @@ Congratulations! The poistron cross section analysis application is now
 
 .. code:: bash
 
-    positron_cross_section --help
+    positron-cross-section --help
 
 in a new terminal window.
 
