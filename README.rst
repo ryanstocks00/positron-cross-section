@@ -83,7 +83,7 @@ Downloading and Installing the Positron Cross Section Analysis package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that we have python and git installed, open a PowerShell window in
-the folder that you would like to download the positron cross section analysis
+the folder that you would like to download the positron cross section
 application. This can be done by opening File Explorer, navigating to
 the folder in which you want to start PowerShell, then typing powershell
 into the address bar and hitting enter. Alternately, you can start
@@ -91,11 +91,11 @@ WindowsPowershell as before and then navigating to the target folder
 using ``cd`` (change directory). You can now run the following commands
 to download and install the application:
 
-1. ``git clone https://github.com/ryanstocks00/positron-cross-section-analysis``
-2. ``cd positron-cross-section-analysis``
+1. ``git clone https://github.com/ryanstocks00/positron-cross-section``
+2. ``cd positron-cross-section``
 3. ``.\tools\windows-install.ps1``
 
-Congratulations! The poistron cross section analysis application is now
+Congratulations! The poistron cross section application is now
 (hopefully) successfully installed and can be run using the command
 
 .. code:: powershell
@@ -113,14 +113,14 @@ Setting up Python Environment
 The python code in this application requires python 3.9 or greater. To
 maintain the integrity of other python applications on your system, it
 is highly recommended to use a separate python environment for the
-positron cross section analysis acpplication, however it can also be installed directly if
+positron cross section application, however it can also be installed directly if
 your python version meets the requirements.
 
 **Installing a python environment**
 
 To set up a separate python environment (recommended), we will use
 `pyenv <https://github.com/pyenv/pyenv>`__ which allows us to isolate
-the positron cross section analysis development environment and python
+the positron cross section development environment and python
 version. To install pyenv, please follow the instructions detailed
 `here <https://realpython.com/intro-to-pyenv/>`__. During this
 installation, you will get the warning
@@ -159,18 +159,18 @@ to enter the positrons python environment using the command
 
 ``pyenv activate positrons``
 
-Downloading and installing the positron cross section analysis application
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Downloading and installing the positron cross section application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To download the source code and install the application, please open a
 terminal, navigate to the folder in which you would like to perform the
 installation and run the commands
 
-1. ``git clone https://github.com/ryanstocks00/positron-cross-section-analysis``
-2. ``cd positron-cross-section-analysis``
+1. ``git clone https://github.com/ryanstocks00/positron-cross-section``
+2. ``cd positron-cross-section``
 3. ``source tools/install-dev-env``
 
-Congratulations! The poistron cross section analysis application is now
+Congratulations! The poistron cross section application is now
 (hopefully) successfully installed and can be run using the command
 
 .. code:: bash
@@ -179,5 +179,5 @@ Congratulations! The poistron cross section analysis application is now
 
 in a new terminal window.
 
-.. |pre-commit| image:: https://github.com/ryanstocks00/positron-cross-section-analysis/actions/workflows/python-3.9-pre-commit.yml/badge.svg
-   :target: https://github.com/ryanstocks00/positron-cross-section-analysis/actions/workflows/python-3.9-pre-commit.yml
+.. |pre-commit| image:: https://github.com/ryanstocks00/positron-cross-section/actions/workflows/python-3.9-pre-commit.yml/badge.svg
+   :target: https://github.com/ryanstocks00/positron-cross-section/actions/workflows/python-3.9-pre-commit.yml

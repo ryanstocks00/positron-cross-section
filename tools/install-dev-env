@@ -13,6 +13,6 @@ python -m pip install --upgrade pylint
 pylint --generate-rcfile > ~/.pylintrc
 
 # Install positron_cross_section
-python -m pip install -e positron_cross_section
+python -m pip install -e .
 
 echo "Congratulations! The Positron Cross Section Analysis application is now installed."

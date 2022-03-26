@@ -149,17 +149,14 @@ class GTCSData:
         self.pressures = pressures
         self.signal_data = signal_data
         self.num_scans = self.signal_data.shape[0]
-        scan_range = list(range(self.num_scans))
 
         self.zeroed_signal_data = self.signal_data - self.signal_data[:, -1:]
-        self.numeric_gas_densities = np.transpose(numeric_density(pressures)).reshape(
-            len(self.pressures), 1
-        )
+        self.numeric_gas_densities = numeric_density(pressures).T.reshape(len(self.pressures), 1)
 
         self.I_or = self.zeroed_signal_data[:, :1]
-        self.I_0 = self.zeroed_signal_data[scan_range, self.metadata.I_0_indices]
-        self.I_0_prime = self.zeroed_signal_data[scan_range, self.metadata.I_0_prime_indices]
-        self.I_m = self.zeroed_signal_data[scan_range, self.metadata.I_m_indices]
+        self.I_0 = self.zeroed_signal_data.T[self.metadata.I_0_indices].T
+        self.I_0_prime = self.zeroed_signal_data.T[self.metadata.I_0_prime_indices].T
+        self.I_m = self.zeroed_signal_data.T[self.metadata.I_m_indices].T
 
         self.raw_total_cross_sections = (
             np.log(self.I_or / self.I_m)

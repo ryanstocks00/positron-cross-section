@@ -10,6 +10,6 @@ pre-commit autoupdate
 py -3.8 -m pip install --upgrade pylint
 
 # Install bushfire_drone_simulation
-py -3.8 -m pip install -e positron_cross_section
+py -3.8 -m pip install -e .
 
 Write-Host "Congratulations! The Positron Cross Section Analysis application is now installed."
