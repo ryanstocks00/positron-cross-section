@@ -1,9 +1,11 @@
 """Module for calculating properties of gasses."""
 
 
-from typing import TypeVar
+from pathlib import Path
+from typing import Any, TypeVar
 
 import numpy as np
+import pandas
 from numpy.typing import NDArray
 
 GAS_CONSTANT = 8.31446261815324
@@ -24,3 +26,22 @@ def numeric_density(pressure: FloatLike, temperature: float = 300) -> FloatLike:
         float: Numeric density (atoms per cubic meter)
     """
     return pressure * MTORR_TO_PASCALS / (temperature * GAS_CONSTANT) * AVOGADROS_CONSTANT
+
+
+def plot_existing_GTCS_data(ax: Any, target: str) -> None:
+    """Plot existing GTCS data."""
+    filename = (
+        Path(__file__).parent.parent.parent / "previous_results" / f"{target.lower()}_tcs.csv"
+    )
+    if filename.exists():
+        previous_tcs = pandas.read_csv(filename)
+        ax.errorbar(
+            previous_tcs["Energy"],
+            previous_tcs["TCS"],
+            yerr=previous_tcs["Error"],
+            fmt="o",
+            color="purple",
+            ecolor="black",
+            capsize=4,
+            label="Chiari et. al.",
+        )
