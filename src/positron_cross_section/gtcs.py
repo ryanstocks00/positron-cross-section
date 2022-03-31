@@ -1,7 +1,9 @@
 """Data and processing for grand total cross section (GTCS)."""
 
 import csv
+import math
 import re
+from math import sqrt
 from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
@@ -117,8 +119,6 @@ class GTCSMetadata(BaseModel):
         """Get I_0 indices for GTCS.
 
         Returns:
-
-        Returns:
             List[int]:
         """
         return list(range(1, len(self.SC_energies) - 1, 3))
@@ -162,8 +162,12 @@ class GTCSData:
         self.I_0 = self.normalized_signal_data.T[self.metadata.I_0_indices].T
         self.I_0_prime = self.normalized_signal_data.T[self.metadata.I_0_prime_indices].T
         self.I_0_ratios = average_columns_with_uncertainty(self.I_0 / self.I_0_prime)
+        self.I_0_differences = average_columns_with_uncertainty(self.I_0 - self.I_0_prime)
         self.I_0_ratio = np.mean(unumpy.nominal_values(self.I_0_ratios[:10]))
-        self.I_m = self.normalized_signal_data.T[self.metadata.I_m_indices].T * self.I_0_ratio
+        self.I_0_difference = np.mean(unumpy.nominal_values(self.I_0_differences[:1]))
+        self.I_m = self.normalized_signal_data.T[self.metadata.I_m_indices].T + (
+            self.I_0_difference
+        )  # self.I_0_ratio
         self.I_st = self.I_0R - self.I_m
         self.I_s = self.I_0_prime - self.I_m
         self.average_I_0R = average_columns_with_uncertainty(self.I_0R)
@@ -190,6 +194,14 @@ class GTCSData:
             / (self.average_I_0R - self.average_I_m)
         )
         self.scattering_cross_sections = self.total_cross_sections - self.ps_cross_sections
+
+        self.delta_E = [
+            (self.metadata.RPA2_cutoff - self.metadata.RPA2_potentials[3:-1:3][i], E)
+            for i, E in enumerate(self.metadata.cross_section_energies)
+        ]
+        self.delta_theta = [
+            math.degrees(np.arccos(sqrt((E - delta_E) / E))) for delta_E, E in self.delta_E
+        ]
 
     def plot_total_cross_section(self, ax: Any) -> None:
         """Plot grand total cross section on axes."""
