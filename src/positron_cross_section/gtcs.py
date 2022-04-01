@@ -7,17 +7,15 @@ from math import sqrt
 from pathlib import Path
 from typing import Any, Callable, Dict, List, TypeVar
 
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 from pydantic import BaseModel, validator
 from uncertainties import unumpy
 
 from positron_cross_section.gas import numeric_density, plot_existing_GTCS_data
+from positron_cross_section.matplotlib_importer import plt
 from positron_cross_section.plot import average_columns_with_uncertainty, cross_section_plot
 
-matplotlib.use("Agg")
 VarType = TypeVar("VarType")
 
 SQUARE_METRES_TO_ANGSTROMS = 1e20

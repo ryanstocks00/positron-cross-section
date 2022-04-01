@@ -2,10 +2,11 @@
 
 from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 from uncertainties import unumpy
+
+from positron_cross_section.matplotlib_importer import plt
 
 
 def cross_section_plot() -> Any:

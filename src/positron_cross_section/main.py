@@ -4,11 +4,11 @@ import logging
 from pathlib import Path
 from sys import stderr
 
-import matplotlib.pyplot as plt
 import numpy as np
 import typer
 
 from positron_cross_section.gtcs import GTCSData
+from positron_cross_section.matplotlib_importer import plt
 
 app = typer.Typer()
 
