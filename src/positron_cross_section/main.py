@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 from sys import stderr
+from typing import Optional
 
 import numpy as np
 import typer
@@ -23,13 +24,14 @@ def main() -> None:
 def grand_total(
     data_filename: Path = typer.Argument(..., help="Path to cross section data file."),
     output_path: Path = typer.Argument("output", help="Path to store output data."),
+    n: Optional[int] = typer.Option(None, help="Path to store output data."),
 ) -> None:
     """Calculate and plot grand total cross section."""
     output_path.mkdir(exist_ok=True, parents=True)
 
-    gtcs_data = GTCSData.from_csv(data_filename)
+    gtcs_data = GTCSData.from_csv(data_filename, num_scans=n)
     gtcs_data.plot_cross_sections(output_path)
-    gtcs_data.plot_I_0_ratio(output_path)
+    gtcs_data.systematic_checks(output_path)
     np.savetxt(
         output_path / "normalized_signal.csv",
         gtcs_data.normalized_signal_data,
@@ -40,20 +42,6 @@ def grand_total(
         gtcs_data.raw_total_cross_sections,
         delimiter=",",
     )
-    fig, ax = plt.subplots()
-    ax.scatter(list(range(gtcs_data.num_scans)), gtcs_data.raw_total_cross_sections[:, 0])
-    z = np.polyfit(list(range(gtcs_data.num_scans)), gtcs_data.raw_total_cross_sections[:, 0], 1)
-    p = np.poly1d(z)
-    ax.plot(
-        list(range(gtcs_data.num_scans)),
-        p(list(range(gtcs_data.num_scans))),
-        "r",
-        label=f"$y={z[0]:0.3f} x{z[1]:+0.3f}$",
-    )
-    ax.set(xlabel="Scan #", ylabel="$\\sigma\\ \\ (Å^2)$")
-    ax.set_title("Cross section measured per scan at 1eV")
-    ax.legend()
-    fig.savefig(output_path / "increasing-cross-section.png")
 
     fig, ax = plt.subplots()
     ax.scatter(gtcs_data.metadata.cross_section_energies, gtcs_data.delta_theta)

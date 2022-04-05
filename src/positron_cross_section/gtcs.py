@@ -5,9 +5,10 @@ import math
 import re
 from math import sqrt
 from pathlib import Path
-from typing import Any, Callable, Dict, List, TypeVar
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 import numpy as np
+from matplotlib.pyplot import close
 from numpy.typing import NDArray
 from pydantic import BaseModel, validator
 from uncertainties import unumpy
@@ -161,7 +162,7 @@ class GTCSData:
         self.I_0_prime = self.normalized_signal_data.T[self.metadata.I_0_prime_indices].T
         self.I_0_ratios = average_columns_with_uncertainty(self.I_0 / self.I_0_prime)
         self.I_0_differences = average_columns_with_uncertainty(self.I_0 - self.I_0_prime)
-        self.I_0_ratio = np.mean(unumpy.nominal_values(self.I_0_ratios[:10]))
+        # self.I_0_ratio = np.mean(unumpy.nominal_values(self.I_0_ratios[:10]))
         self.I_0_difference = np.mean(unumpy.nominal_values(self.I_0_differences[:1]))
         self.I_m = self.normalized_signal_data.T[self.metadata.I_m_indices].T + (
             self.I_0_difference
@@ -173,13 +174,13 @@ class GTCSData:
         self.average_I_m = average_columns_with_uncertainty(self.I_m)
 
         self.raw_total_cross_sections = (
-            np.log(self.I_0R / self.I_m)
+            -np.log(self.I_m / self.I_0R)
             / (self.numeric_gas_densities * self.metadata.SC_length)
             * SQUARE_METRES_TO_ANGSTROMS
         )
         self.total_cross_sections = average_columns_with_uncertainty(self.raw_total_cross_sections)
         self.total_cross_sections_by_I_average = (
-            unumpy.log(self.average_I_0R / self.average_I_m)  # pylint: disable=no-member
+            -unumpy.log(self.average_I_m / self.average_I_0R)  # pylint: disable=no-member
             / (
                 average_columns_with_uncertainty(self.numeric_gas_densities)
                 * self.metadata.SC_length
@@ -282,8 +283,42 @@ class GTCSData:
         ax.legend()
         fig.savefig(output_path / f"cross-sections-{self.metadata.target.lower()}.png")
 
+    def systematic_checks(self, output_path: Path) -> None:
+        """Run and plot systematic checks for GTCS.
+
+        Args:
+            output_path:
+        """
+        output_path = output_path / "systematic_checks"
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        self.plot_I_0_ratio(output_path)
+
+        for i, energy in enumerate(self.metadata.cross_section_energies):
+            fig, ax = plt.subplots()
+            ax.scatter(list(range(self.num_scans)), self.raw_total_cross_sections[:, i], marker=".")
+            z = np.polyfit(list(range(self.num_scans)), self.raw_total_cross_sections[:, i], 1)
+            p = np.poly1d(z)
+            ax.plot(
+                list(range(self.num_scans)),
+                p(list(range(self.num_scans))),
+                "r",
+                label=f"$y={z[0]:0.3f} x{z[1]:+0.3f}$",
+            )
+            ax.set(xlabel="Scan #", ylabel="$\\sigma\\ \\ (Å^2)$", ylim=(-100, 200))
+            ax.set_title(f"Cross section measured per scan at {energy}eV")
+            ax.legend()
+            fig.savefig(output_path / f"cross-section-against-time-{energy}eV.png")
+            close(fig)
+
+        fig, ax = plt.subplots()
+        ax.scatter(list(range(len(self.pressures))), self.pressures)
+        ax.set(xlabel="Scan #", ylabel="Pressure (mTorr)")
+        ax.set_title("Pressure over time")
+        fig.savefig(output_path / "pressure.png")
+
     def plot_I_0_ratio(self, output_path: Path) -> None:
-        """Plot the ratio I_0/I_0' as a systematic (sanity) check."""
+        """Plot the ratio I_0/I_0' as a systematic check."""
         fig, ax = plt.subplots()
         ax.errorbar(
             self.metadata.cross_section_energies,
@@ -298,7 +333,7 @@ class GTCSData:
         fig.savefig(output_path / f"I_0-ratio-{self.metadata.target.lower()}.png")
 
     @classmethod
-    def from_csv(cls, csv_filename: Path) -> "GTCSData":
+    def from_csv(cls, csv_filename: Path, num_scans: Optional[int]) -> "GTCSData":
         """Read GTCS data from CSV file.
 
         Args:
@@ -315,11 +350,15 @@ class GTCSData:
         SC_cutoff = extract_from_csv_row(parameter_row, "Scattering Cell Cutoff: (.*) V", float)
 
         scan_rows = csv_data[6:]
-        pressures: NDArray[np.float64] = np.ndarray(len(scan_rows) // 2, dtype="float64")
-        signal_data: NDArray[np.float64] = np.ndarray(
-            (len(scan_rows) // 2, len(scan_rows[0])), dtype="float64"
+        if num_scans:
+            num_scans = min(num_scans, len(scan_rows) // 2)
+        pressures: NDArray[np.float64] = np.ndarray(
+            num_scans or len(scan_rows) // 2, dtype="float64"
         )
-        for i in range(0, len(scan_rows) // 2):
+        signal_data: NDArray[np.float64] = np.ndarray(
+            (num_scans or len(scan_rows) // 2, len(scan_rows[1])), dtype="float64"
+        )
+        for i in range(0, num_scans or len(scan_rows) // 2):
             pressures[i] = scan_rows[2 * i][0]
             signal_data[i] = scan_rows[2 * i + 1]
 
@@ -342,8 +381,8 @@ class GTCSData:
                 ),
                 M_ratio=extract_from_csv_row(parameter_row, "Magnetic Beach Ratio: (.*)$", float),
                 dumps_per_point=extract_from_csv_row(parameter_row, "Dumps per Point: (.*)$", int),
-                SC_energies=[round(SC_cutoff - float(val), 2) for val in csv_data[3]],
-                RPA2_potentials=[float(val) for val in csv_data[2]],
+                SC_energies=[round(SC_cutoff - float(val), 2) for val in csv_data[3] if val],
+                RPA2_potentials=[float(val) for val in csv_data[2] if val],
             ),
             pressures=pressures,
             signal_data=signal_data,
