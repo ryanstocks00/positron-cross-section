@@ -15,7 +15,11 @@ from uncertainties import unumpy
 
 from positron_cross_section.gas import numeric_density, plot_existing_GTCS_data
 from positron_cross_section.matplotlib_importer import plt
-from positron_cross_section.plot import average_columns_with_uncertainty, cross_section_plot
+from positron_cross_section.plot import (
+    average_columns_with_uncertainty,
+    cross_section_plot,
+    median_columns_with_uncertainty,
+)
 
 VarType = TypeVar("VarType")
 
@@ -154,6 +158,7 @@ class GTCSData:
         self.num_scans = self.signal_data.shape[0]
 
         self.zeroed_signal_data = self.signal_data - np.mean(self.signal_data[:, -1:])
+        # self.zeroed_signal_data = self.signal_data - self.signal_data[:, -1:]
         self.normalized_signal_data = self.zeroed_signal_data / self.zeroed_signal_data[:, :1]
         self.numeric_gas_densities = numeric_density(pressures).T.reshape(len(self.pressures), 1)
 
@@ -179,6 +184,9 @@ class GTCSData:
             * SQUARE_METRES_TO_ANGSTROMS
         )
         self.total_cross_sections = average_columns_with_uncertainty(self.raw_total_cross_sections)
+        self.median_total_cross_sections = median_columns_with_uncertainty(
+            self.raw_total_cross_sections
+        )
         self.total_cross_sections_by_I_average = (
             -unumpy.log(self.average_I_m / self.average_I_0R)  # pylint: disable=no-member
             / (
@@ -228,6 +236,19 @@ class GTCSData:
             label="Grand Total (averaging I)",
         )
 
+    def plot_total_cross_section_by_median(self, ax: Any) -> None:
+        """Plot grand total cross section on axes."""
+        ax.errorbar(
+            self.metadata.cross_section_energies,
+            unumpy.nominal_values(self.median_total_cross_sections),
+            yerr=unumpy.std_devs(self.median_total_cross_sections),
+            fmt="o",
+            color="orange",
+            ecolor="black",
+            capsize=4,
+            label="Grand Total (median)",
+        )
+
     def plot_ps_cross_section(self, ax: Any) -> None:
         """Plot positronium cross section on axes."""
         ax.errorbar(
@@ -257,8 +278,9 @@ class GTCSData:
     def plot_cross_sections(self, output_path: Path) -> None:
         """Plot grand total, positronium, and scattering cross sections."""
         fig, ax = cross_section_plot()
-        self.plot_total_cross_section_by_I(ax)
+        # self.plot_total_cross_section_by_I(ax)
         self.plot_total_cross_section(ax)
+        # self.plot_total_cross_section_by_median(ax)
         ax.set_title(
             f"Grand total cross section for positron-{self.metadata.target.lower()} interaction"
         )
@@ -276,8 +298,9 @@ class GTCSData:
         fig, ax = cross_section_plot()
         plot_existing_GTCS_data(ax, self.metadata.target)
         self.plot_scattering_cross_section(ax)
-        self.plot_total_cross_section_by_I(ax)
+        # self.plot_total_cross_section_by_I(ax)
         self.plot_total_cross_section(ax)
+        # self.plot_total_cross_section_by_median(ax)
         self.plot_ps_cross_section(ax)
         ax.set_title(f"Cross section for positron-{self.metadata.target.lower()} interaction")
         ax.legend()

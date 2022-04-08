@@ -31,3 +31,20 @@ def average_columns_with_uncertainty(array: NDArray[np.float64]) -> Any:
         np.mean(array, axis=0),
         np.std(array, axis=0) / np.sqrt(array.shape[0]),
     )
+
+
+def median_columns_with_uncertainty(array: NDArray[np.float64]) -> Any:
+    """Find the median of the columns in np.ndarray and return with statistical uncertainty.
+
+    Args:
+        array (NDArray): array
+
+    Returns:
+        NDArray:
+    """
+    N = array.shape[0]
+    n = (N - 1) / 2
+    return unumpy.uarray(
+        np.median(array, axis=0),
+        np.std(array, axis=0) / np.sqrt(array.shape[0]) * np.sqrt(np.pi * N / (4 * n)),
+    )
