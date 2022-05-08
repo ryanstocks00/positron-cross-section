@@ -10,6 +10,7 @@ import typer
 
 from positron_cross_section.gtcs import GTCSData
 from positron_cross_section.matplotlib_importer import plt
+from positron_cross_section.plot import save_plot
 
 app = typer.Typer()
 
@@ -47,7 +48,9 @@ def grand_total(
     ax.scatter(gtcs_data.metadata.cross_section_energies, gtcs_data.delta_theta)
     ax.set(xlabel="Incident Energy (ev)", ylabel="$\\delta\\theta$")
     ax.set_title("$\\delta\\theta$ for positron incident energies")
-    fig.savefig(output_path / "delta-theta.png")
+    save_plot(fig, output_path / "delta-theta.png")
+
+    gtcs_data.summary_to_csv(output_path / "summary.csv")
 
 
 if __name__ == "__main__":

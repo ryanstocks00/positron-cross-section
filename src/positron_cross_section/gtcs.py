@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 import numpy as np
+import pandas
 from matplotlib.pyplot import close
 from numpy.typing import NDArray
 from pydantic import BaseModel, validator
@@ -19,6 +20,7 @@ from positron_cross_section.plot import (
     average_columns_with_uncertainty,
     cross_section_plot,
     median_columns_with_uncertainty,
+    save_plot,
 )
 
 VarType = TypeVar("VarType")
@@ -230,10 +232,11 @@ class GTCSData:
             unumpy.nominal_values(self.total_cross_sections_by_I_average),
             yerr=unumpy.std_devs(self.total_cross_sections_by_I_average),
             fmt="o",
-            color="steelblue",
+            color="purple",
             ecolor="black",
             capsize=4,
-            label="Grand Total (averaging I)",
+            label="Grand Total",
+            zorder=100,
         )
 
     def plot_total_cross_section_by_median(self, ax: Any) -> None:
@@ -255,7 +258,7 @@ class GTCSData:
             self.metadata.cross_section_energies,
             unumpy.nominal_values(self.ps_cross_sections),
             yerr=unumpy.std_devs(self.ps_cross_sections),
-            fmt="o",
+            fmt="p",
             color="red",
             ecolor="black",
             capsize=4,
@@ -268,24 +271,27 @@ class GTCSData:
             self.metadata.cross_section_energies,
             unumpy.nominal_values(self.scattering_cross_sections),
             yerr=unumpy.std_devs(self.scattering_cross_sections),
-            fmt="o",
+            fmt="v",
             color="green",
             ecolor="black",
             capsize=4,
             label="Scattering",
+            zorder=50,
         )
 
     def plot_cross_sections(self, output_path: Path) -> None:
         """Plot grand total, positronium, and scattering cross sections."""
         fig, ax = cross_section_plot()
-        # self.plot_total_cross_section_by_I(ax)
-        self.plot_total_cross_section(ax)
+        self.plot_total_cross_section_by_I(ax)
+        # self.plot_total_cross_section(ax)
         # self.plot_total_cross_section_by_median(ax)
         ax.set_title(
             f"Grand total cross section for positron-{self.metadata.target.lower()} interaction"
         )
-        ax.legend()
-        fig.savefig(output_path / f"grand-total-cross-section-{self.metadata.target.lower()}.png")
+        ax.legend(prop={"size": 10}, numpoints=1)
+        save_plot(
+            fig, output_path / f"grand-total-cross-section-{self.metadata.target.lower()}.png"
+        )
 
         fig, ax = cross_section_plot()
         self.plot_ps_cross_section(ax)
@@ -293,18 +299,18 @@ class GTCSData:
             f"Positronium formation cross section for positron-{self.metadata.target.lower()} "
             "interaction"
         )
-        fig.savefig(output_path / f"ps-cross-section-{self.metadata.target.lower()}.png")
+        save_plot(fig, output_path / f"ps-cross-section-{self.metadata.target.lower()}.png")
 
         fig, ax = cross_section_plot()
-        plot_existing_GTCS_data(ax, self.metadata.target)
-        self.plot_scattering_cross_section(ax)
-        # self.plot_total_cross_section_by_I(ax)
-        self.plot_total_cross_section(ax)
-        # self.plot_total_cross_section_by_median(ax)
+        self.plot_total_cross_section_by_I(ax)
         self.plot_ps_cross_section(ax)
+        self.plot_scattering_cross_section(ax)
+        plot_existing_GTCS_data(ax, self.metadata.target)
+        # self.plot_total_cross_section(ax)
+        # self.plot_total_cross_section_by_median(ax)
         ax.set_title(f"Cross section for positron-{self.metadata.target.lower()} interaction")
-        ax.legend()
-        fig.savefig(output_path / f"cross-sections-{self.metadata.target.lower()}.png")
+        ax.legend(prop={"size": 10}, numpoints=1)
+        save_plot(fig, output_path / f"cross-sections-{self.metadata.target.lower()}.png")
 
     def systematic_checks(self, output_path: Path) -> None:
         """Run and plot systematic checks for GTCS.
@@ -330,15 +336,15 @@ class GTCSData:
             )
             ax.set(xlabel="Scan #", ylabel="$\\sigma\\ \\ (Å^2)$", ylim=(-100, 200))
             ax.set_title(f"Cross section measured per scan at {energy}eV")
-            ax.legend()
-            fig.savefig(output_path / f"cross-section-against-time-{energy}eV.png")
+            ax.legend(prop={"size": 10}, numpoints=1)
+            save_plot(fig, output_path / f"cross-section-against-time-{energy}eV.png")
             close(fig)
 
         fig, ax = plt.subplots()
         ax.scatter(list(range(len(self.pressures))), self.pressures)
         ax.set(xlabel="Scan #", ylabel="Pressure (mTorr)")
         ax.set_title("Pressure over time")
-        fig.savefig(output_path / "pressure.png")
+        save_plot(fig, output_path / "pressure.png")
 
     def plot_I_0_ratio(self, output_path: Path) -> None:
         """Plot the ratio I_0/I_0' as a systematic check."""
@@ -353,7 +359,7 @@ class GTCSData:
             capsize=4,
         )
         ax.set_title("Ratio $\\frac{I_0}{I_0'}$")
-        fig.savefig(output_path / f"I_0-ratio-{self.metadata.target.lower()}.png")
+        save_plot(fig, output_path / f"I_0-ratio-{self.metadata.target.lower()}.png")
 
     @classmethod
     def from_csv(cls, csv_filename: Path, num_scans: Optional[int]) -> "GTCSData":
@@ -410,3 +416,26 @@ class GTCSData:
             pressures=pressures,
             signal_data=signal_data,
         )
+
+    def summary_to_csv(self, filename: Path) -> None:
+        """Save cross section summary to csv file.
+
+        Args:
+            filename (Path): filename
+        """
+        summary = pandas.DataFrame(
+            {
+                "Energy (eV)": self.metadata.cross_section_energies,
+                "Total cross section (Angstrom^2)": unumpy.nominal_values(
+                    self.total_cross_sections_by_I_average
+                ),
+                "TCS uncertainty (Angstrom^2)": unumpy.std_devs(
+                    self.total_cross_sections_by_I_average
+                ),
+                "Positronium cross section (Angstrom^2)": unumpy.nominal_values(
+                    self.ps_cross_sections
+                ),
+                "PCS uncertainty (Angstrom^2)": unumpy.std_devs(self.ps_cross_sections),
+            },
+        )
+        summary.to_csv(filename)

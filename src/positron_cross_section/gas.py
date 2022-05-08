@@ -39,9 +39,26 @@ def plot_existing_GTCS_data(ax: Any, target: str) -> None:
             previous_tcs["Energy"],
             previous_tcs["TCS"],
             yerr=previous_tcs["Error"],
-            fmt="o",
-            color="purple",
+            fmt="d",
+            color="maroon",
             ecolor="black",
             capsize=4,
             label="Chiari et. al.",
+        )
+    filename = (
+        Path(__file__).parent.parent.parent
+        / "previous_results"
+        / f"{target.lower()}_tcs_floeder.csv"
+    )
+    if filename.exists():
+        previous_tcs = pandas.read_csv(filename)
+        ax.errorbar(
+            previous_tcs["Energy"],
+            previous_tcs["TCS"],
+            yerr=previous_tcs["Error"],
+            fmt="^",
+            color="blue",
+            ecolor="white",
+            capsize=0,
+            label="Floeder et. al.",
         )
