@@ -204,6 +204,10 @@ class GTCSData:
         )
         self.scattering_cross_sections = self.total_cross_sections - self.ps_cross_sections
 
+        self.raw_ps_cross_sections = (
+            self.raw_total_cross_sections * (self.I_0R - self.I_0) / (self.I_0R - self.I_m)
+        )
+
         self.delta_E = [
             (self.metadata.RPA2_cutoff - self.metadata.RPA2_potentials[3:-1:3][i], E)
             for i, E in enumerate(self.metadata.cross_section_energies)
@@ -325,16 +329,38 @@ class GTCSData:
 
         for i, energy in enumerate(self.metadata.cross_section_energies):
             fig, ax = plt.subplots()
-            ax.scatter(list(range(self.num_scans)), self.raw_total_cross_sections[:, i], marker=".")
+            ax.scatter(
+                list(range(self.num_scans)),
+                self.raw_total_cross_sections[:, i],
+                marker=".",
+                label="Total",
+            )
             z = np.polyfit(list(range(self.num_scans)), self.raw_total_cross_sections[:, i], 1)
             p = np.poly1d(z)
             ax.plot(
                 list(range(self.num_scans)),
                 p(list(range(self.num_scans))),
                 "r",
-                label=f"$y={z[0]:0.3f} x{z[1]:+0.3f}$",
+                label=f"$y={z[0]:0.3f} x{z[1]:+0.3f}$ (Total)",
             )
-            ax.set(xlabel="Scan #", ylabel="$\\sigma\\ \\ (Å^2)$", ylim=(-100, 200))
+
+            ax.scatter(
+                list(range(self.num_scans)),
+                self.raw_ps_cross_sections[:, i],
+                marker=".",
+                color="skyblue",
+                label="Positronium",
+            )
+            z = np.polyfit(list(range(self.num_scans)), self.raw_ps_cross_sections[:, i], 1)
+            p = np.poly1d(z)
+            ax.plot(
+                list(range(self.num_scans)),
+                p(list(range(self.num_scans))),
+                "orange",
+                label=f"$y={z[0]:0.3f} x{z[1]:+0.3f}$ (Positronium)",
+            )
+
+            ax.set(xlabel="Scan #", ylabel="$\\sigma\\ \\ (Å^2)$", ylim=(-50, 100))
             ax.set_title(f"Cross section measured per scan at {energy}eV")
             ax.legend(prop={"size": 10}, numpoints=1)
             save_plot(fig, output_path / f"cross-section-against-time-{energy}eV.png")
