@@ -279,7 +279,7 @@ class GTCSData:
             color="darkorange",
             ecolor="black",
             capsize=4,
-            label="Scattering",
+            label="Difference",
             zorder=50,
         )
 
