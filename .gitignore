@@ -129,9 +129,3 @@ dmypy.json
 .vscode
 .setupmeta.version
 *.vim
-
-# Input files
-data/
-
-# Output files
-output/
